@@ -1,11 +1,8 @@
 module Logic where
 
 import           Control.Monad                  ( forever )
-import           Data.Char                      ( toLower )
 import           Data.List                      ( intersperse )
-import           Data.Maybe                     ( isJust
-                                                , maybe
-                                                )
+import           Data.Maybe                     ( isJust )
 import           System.Exit                    ( exitSuccess )
 import           System.IO                      ( BufferMode(NoBuffering)
                                                 , hSetBuffering
@@ -44,6 +41,7 @@ randomWord' :: IO String
 randomWord' = gameWords >>= randomWord
 
 data Puzzle = Puzzle String [Maybe Char] [Char]
+  deriving Eq
 
 instance Show Puzzle where
   show (Puzzle _ discovered guessed) =
