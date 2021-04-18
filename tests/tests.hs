@@ -11,6 +11,7 @@ import           Logic                          ( Puzzle(..)
                                                 , handleGuess
                                                 )
 import           Test.QuickCheck
+import           Test.QuickCheck.Monadic
 
 regularChar :: Gen Char
 regularChar = elements ['a' .. 'z']
@@ -67,9 +68,37 @@ prop_charactersNotInWordAreNotFilledIn = forAll
     in  not $ characterIsFilledIn newPuzzle c && alreadyGuessed newPuzzle c
   )
 
+prop_alreadyGuessedDoesNotChangePuzzle :: Property
+prop_alreadyGuessedDoesNotChangePuzzle = forAll
+  puzzleAndCharAlreadyGuessed
+  (\(p, c) -> monadicIO $ do
+    newPuzzle <- run (handleGuess p c)
+    assert (p == newPuzzle)
+  )
+
+prop_guessCharacterInWord :: Property
+prop_guessCharacterInWord = forAll
+  puzzleAndCharInWord
+  (\(p, c) -> monadicIO $ do
+    newPuzzle@(Puzzle _ _ guessed) <- run (handleGuess p c)
+    assert (characterIsFilledIn newPuzzle c)
+    assert (c `elem` guessed)
+  )
+
+prop_guessCharacterNotInWord :: Property
+prop_guessCharacterNotInWord = forAll
+  puzzleAndCharNotInWord
+  (\(p, c) -> monadicIO $ do
+    newPuzzle@(Puzzle _ _ guessed) <- run (handleGuess p c)
+    assert (not $ characterIsFilledIn newPuzzle c)
+    assert (c `elem` guessed)
+  )
 
 main :: IO ()
 main = do
   quickCheck prop_filledInSoFarEmptyAtBeginning
   quickCheck prop_charactersInWordAreFilledIn
   quickCheck prop_charactersNotInWordAreNotFilledIn
+  quickCheck prop_alreadyGuessedDoesNotChangePuzzle
+  quickCheck prop_guessCharacterInWord
+  quickCheck prop_guessCharacterNotInWord
